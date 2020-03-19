@@ -150,7 +150,7 @@ on [configuring a `VolumeSource`](#volumesources-for-workspaces) in your `TaskRu
 #### Example TaskRun Specs With Workspaces
 
 The examples below show the relevant fields of TaskRun specs when working with
-Workspaces. For a more complete end-to-end example, see [the Workspaces TaskRun](../examples/v1beta1/taskruns/workspace.yaml)
+Workspaces. For a more complete end-to-end example, see [the Workspaces TaskRun](../examples/v1beta1/taskruns/workspaces.yaml)
 in the examples directory.
 
 Here an existing PersistentVolumeClaim called `mypvc` is used for a Task's `workspace`
