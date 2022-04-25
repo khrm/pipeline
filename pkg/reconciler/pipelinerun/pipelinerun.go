@@ -236,7 +236,7 @@ func (c *Reconciler) ReconcileKind(ctx context.Context, pr *v1beta1.PipelineRun)
 	return nil
 }
 
-func (c *Reconciler) durationAndCountMetrics(ctx context.Context, pr *v1beta1.PipelineRun) {
+func (c *Reconciler) durationAndCountMetrics(ctx context.Context, pr *v1beta1.PipelineRun, beforeT *apis.Condition) {
 	logger := logging.FromContext(ctx)
 	if pr.IsDone() {
 		// We get latest pipelinerun cr already to avoid recount
@@ -244,7 +244,9 @@ func (c *Reconciler) durationAndCountMetrics(ctx context.Context, pr *v1beta1.Pi
 		if err != nil {
 			logger.Errorf("Error getting PipelineRun %s when updating metrics: %w", pr.Name, err)
 		}
+		after := pr.Status.GetCondition(apis.ConditionSucceeded)
 		before := newPr.Status.GetCondition(apis.ConditionSucceeded)
+		logger.Warnf("beforeCond : \n name %+v \n BeforeFromLister %+v, \n BeforeLister %+v, \n After %+v", pr.Name, before, beforeT, after)
 		go func(metrics *pipelinerunmetrics.Recorder) {
 			err := metrics.DurationAndCount(pr, before)
 			if err != nil {
@@ -331,7 +333,7 @@ func (c *Reconciler) resolvePipelineState(
 }
 
 func (c *Reconciler) reconcile(ctx context.Context, pr *v1beta1.PipelineRun, getPipelineFunc resources.GetPipeline) error {
-	defer c.durationAndCountMetrics(ctx, pr)
+	defer c.durationAndCountMetrics(ctx, pr, pr.Status.GetCondition(apis.ConditionSucceeded))
 	logger := logging.FromContext(ctx)
 	cfg := config.FromContextOrDefaults(ctx)
 	pr.SetDefaults(ctx)
