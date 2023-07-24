@@ -41,6 +41,10 @@ func MergeStepsWithStepTemplate(template *StepTemplate, steps []Step) ([]Step, e
 		return steps, nil
 	}
 
+	stepCopy := make([]Step, len(steps))
+	copy(stepCopy, steps)
+	steps = stepCopy
+
 	md, err := getMergeData(template.ToK8sContainer(), &corev1.Container{})
 	if err != nil {
 		return nil, err

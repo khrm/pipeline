@@ -499,6 +499,12 @@ func (c *Reconciler) reconcile(ctx context.Context, tr *v1.TaskRun, rtr *resourc
 
 	// Get the randomized volume names assigned to workspace bindings
 	workspaceVolumes := workspace.CreateVolumes(tr.Spec.Workspaces)
+	if tr.Status.TaskSpec != nil {
+		logger.Infof("1*****tr spec steptem****: %+v", tr.Status.TaskSpec.StepTemplate.VolumeMounts)
+		logger.Infof("1*****tr spec step****: %+v", tr.Status.TaskSpec.Steps[0].VolumeMounts)
+		logger.Infof("1*****tr spec step****: %+v", tr.Status.TaskSpec.Steps[1].VolumeMounts)
+		logger.Infof("1*****tr spec step****: %+v", tr.Status.TaskSpec.Steps[2].VolumeMounts)
+	}
 
 	ts, err := applyParamsContextsResultsAndWorkspaces(ctx, tr, rtr, workspaceVolumes)
 	if err != nil {
@@ -709,19 +715,44 @@ func (c *Reconciler) createPod(ctx context.Context, ts *v1.TaskSpec, tr *v1.Task
 	defer span.End()
 	logger := logging.FromContext(ctx)
 
+	ts = ts.DeepCopy()
+
+	if tr.Status.TaskSpec != nil {
+		logger.Infof("3*****tr spec steptem****: %+v", tr.Status.TaskSpec.StepTemplate.VolumeMounts)
+		logger.Infof("3*****tr spec step****: %+v", tr.Status.TaskSpec.Steps[0].VolumeMounts)
+		logger.Infof("3*****tr spec step****: %+v", tr.Status.TaskSpec.Steps[1].VolumeMounts)
+		logger.Infof("3*****tr spec step****: %+v", tr.Status.TaskSpec.Steps[2].VolumeMounts)
+	}
+
 	// By this time, params and workspaces should be propagated down so we can
 	// validate that all parameter variables and workspaces used in the TaskSpec are declared by the Task.
 	if validateErr := v1.ValidateUsageOfDeclaredParameters(ctx, ts.Steps, ts.Params); validateErr != nil {
+		if tr.Status.TaskSpec != nil {
+			logger.Infof("7*****tr spec steptem****: %+v", ts.StepTemplate.VolumeMounts)
+			logger.Infof("7*****tr spec step****: %+v", ts.Steps[0].VolumeMounts)
+			logger.Infof("7*****tr spec step****: %+v", ts.Steps[1].VolumeMounts)
+			logger.Infof("7*****tr spec step****: %+v", ts.Steps[2].VolumeMounts)
+		}
 		logger.Errorf("Failed to create a pod for taskrun: %s due to task validation error %v", tr.Name, validateErr)
 		return nil, validateErr
 	}
 	if validateErr := ts.Validate(ctx); validateErr != nil {
+		if tr.Status.TaskSpec != nil {
+			logger.Infof("77*****tr spec steptem****: %+v", ts.StepTemplate.VolumeMounts)
+			logger.Infof("77*****tr spec step****: %+v", ts.Steps[0].VolumeMounts)
+			logger.Infof("77*****tr spec step****: %+v", ts.Steps[1].VolumeMounts)
+			logger.Infof("77*****tr spec step****: %+v", ts.Steps[2].VolumeMounts)
+		}
 		logger.Errorf("Failed to create a pod for taskrun: %s due to task validation error %v", tr.Name, validateErr)
 		return nil, validateErr
 	}
 
 	var err error
 	ts, err = workspace.Apply(ctx, *ts, tr.Spec.Workspaces, workspaceVolumes)
+
+	if tr.Status.TaskSpec != nil {
+		logger.Infof("*****tr spec steptem****: %+v", ts.StepTemplate.VolumeMounts)
+	}
 
 	if err != nil {
 		logger.Errorf("Failed to create a pod for taskrun: %s due to workspace error %v", tr.Name, err)
