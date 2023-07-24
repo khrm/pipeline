@@ -83,14 +83,18 @@ func (ts *TaskSpec) Validate(ctx context.Context) (errs *apis.FieldError) {
 	errs = errs.Also(ValidateVolumes(ts.Volumes).ViaField("volumes"))
 	errs = errs.Also(validateDeclaredWorkspaces(ts.Workspaces, ts.Steps, ts.StepTemplate).ViaField("workspaces"))
 	errs = errs.Also(validateWorkspaceUsages(ctx, ts))
-	mergedSteps, err := MergeStepsWithStepTemplate(ts.StepTemplate, ts.Steps)
+	//	stepCopy := make([]Step, len(ts.Steps))
+	//	copy(stepCopy, ts.Steps)
+
+	/*mergedSteps, err := MergeStepsWithStepTemplate(ts.StepTemplate, stepCopy)
 	if err != nil {
 		errs = errs.Also(&apis.FieldError{
 			Message: fmt.Sprintf("error merging step template and steps: %s", err),
 			Paths:   []string{"stepTemplate"},
 			Details: err.Error(),
 		})
-	}
+	}*/
+	mergedSteps := ts.Steps
 
 	errs = errs.Also(validateSteps(ctx, mergedSteps).ViaField("steps"))
 	errs = errs.Also(validateSidecarNames(ts.Sidecars))
