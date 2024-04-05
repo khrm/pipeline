@@ -124,6 +124,7 @@ const (
 	ociBundlesFeatureFlag          = "enable-tekton-oci-bundles"
 	maxMatrixCombinationsCountFlag = "default-max-matrix-combinations-count"
 	disableAffinityAssistantFlag   = "disable-affinity-assistant"
+	timeFormat                     = "2006-01-02T15:04:05.000Z07:00"
 )
 
 type PipelineRunTest struct {
@@ -3125,7 +3126,7 @@ spec:
   pipelineRef:
     name: test-pipeline-with-finally
 status:
-  startTime: "2021-12-31T23:40:00Z"
+  startTime: %s
   childReferences:
   - name: test-pipeline-run-with-set-finally-start-time-hello-world
     apiVersion: tekton.dev/v1
@@ -3136,7 +3137,7 @@ status:
       - lastTransitionTime: null
         status: "True"
         type: Succeeded
-`, prName)),
+`, prName, time.Now().Format(timeFormat))),
 		wantEvents: []string{
 			"Normal Started",
 		},
@@ -3172,7 +3173,7 @@ spec:
     tasks: 5m
     pipeline: 20m
 status:
-  startTime: "2021-12-31T23:40:00Z"
+  startTime: %s
   childReferences:
   - name: test-pipeline-run-with-set-finally-start-time-hello-world
     apiVersion: tekton.dev/v1
@@ -3192,7 +3193,7 @@ status:
       - lastTransitionTime: null
         status: "Unknown"
         type: Succeeded
-`, prName)),
+`, prName, time.Now().Format(timeFormat))),
 		wantEvents: []string{
 			"Normal Started",
 		},
@@ -3221,7 +3222,7 @@ spec:
     tasks: 5m
     pipeline: 20m
 status:
-  startTime: "2021-12-31T23:40:00Z"
+  startTime: %s
   childReferences:
   - name: test-pipeline-run-with-set-finally-start-time-hello-world
     apiVersion: tekton.dev/v1
@@ -3232,7 +3233,7 @@ status:
       - lastTransitionTime: null
         status: "True"
         type: Succeeded
-`, prName)),
+`, prName, time.Now().Format(timeFormat))),
 		wantEvents: []string{
 			"Normal Succeeded Tasks Completed: 1 (Failed: 0, Cancelled 0), Skipped: 0",
 		},
@@ -3261,7 +3262,7 @@ spec:
     tasks: 5m
     pipeline: 20m
 status:
-  startTime: "2021-12-31T23:40:00Z"
+  startTime: %s
   childReferences:
   - name: test-pipeline-run-with-set-finally-start-time-hello-world
     apiVersion: tekton.dev/v1
@@ -3272,7 +3273,7 @@ status:
       - lastTransitionTime: null
         status: "True"
         type: Succeeded
-`, prName)),
+`, prName, time.Now().Format(timeFormat))),
 		wantEvents: []string{
 			"Normal Succeeded Tasks Completed: 1 (Failed: 0, Cancelled 0), Skipped: 1",
 		},
