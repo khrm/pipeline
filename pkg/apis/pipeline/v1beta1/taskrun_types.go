@@ -254,6 +254,9 @@ type TaskRunStatusFields struct {
 	// PodName is the name of the pod responsible for executing this task's steps.
 	PodName string `json:"podName"`
 
+	// PodUID is the uid of the pod responsible for executing this task's steps.
+	PodUID string `json:"podUID"`
+
 	// StartTime is the time the build is actually started.
 	StartTime *metav1.Time `json:"startTime,omitempty"`
 

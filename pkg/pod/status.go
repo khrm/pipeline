@@ -139,6 +139,7 @@ func MakeTaskRunStatus(ctx context.Context, logger *zap.SugaredLogger, tr v1.Tas
 	}
 
 	trs.PodName = pod.Name
+	trs.PodUID = string(pod.UID)
 	trs.Steps = []v1.StepState{}
 	trs.Sidecars = []v1.SidecarState{}
 
