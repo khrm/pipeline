@@ -1,5 +1,4 @@
 //go:build examples
-// +build examples
 
 /*
 Copyright 2020 The Tekton Authors
@@ -194,6 +193,7 @@ func extractTestName(baseDir string, path string) string {
 	return string(submatch[1])
 }
 
+// @test:execution=parallel
 func TestExamples(t *testing.T) {
 	pf, err := getPathFilter(t)
 	if err != nil {
@@ -204,7 +204,6 @@ func TestExamples(t *testing.T) {
 }
 
 func testYamls(t *testing.T, baseDir string, createFunc createFunc, filter pathFilter) {
-	t.Parallel()
 	for _, path := range getExamplePaths(t, baseDir, filter) {
 		path := path // capture range variable
 		testName := extractTestName(baseDir, path)

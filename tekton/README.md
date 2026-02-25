@@ -131,38 +131,22 @@ release and generate the `release.yaml`
   [`tektoncd/catalog`](https://github.com/tektoncd/catalog) and
   [`publish.yaml`](publish.yaml)'s `Task`.
 
-### Service account and secrets
+### Dogfooding Cluster connectivity and secrets
 
-In order to release, these Pipelines use the `release-right-meow` service account,
-which uses `release-secret` and has
-[`Storage Admin`](https://cloud.google.com/container-registry/docs/access-control)
-access to
-[`tekton-releases`]((https://github.com/tektoncd/plumbing/blob/main/gcp.md))
-and
-[`tekton-releases-nightly`]((https://github.com/tektoncd/plumbing/blob/main/gcp.md)).
+1. To connect to the cloud instance and OKE cluster we need the Oracle Cloud CLI client. Install Oracle Cloud CLI from https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm
 
-After creating these service accounts in GCP, the kubernetes service account and
-secret were created with:
+1. The next step is to establish connection from the local client to the cloud instance. Login to the Oracle Cloud Console and create a new `API key` from the user profile.
+Follow the steps here: https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm#two
+Download a Private Key and Add a new API key as mentioned in the doc. Copy the config file to `~/.oci/config` and update the path to the private key file in config.
+With this the config is ready for usage by the CLI.
 
-```bash
-KEY_FILE=release.json
-GENERIC_SECRET=release-secret
-ACCOUNT=release-right-meow
+1. Test the connection by doing a get of the OKE cluster id.
+Refer here https://docs.oracle.com/en-us/iaas/tools/oci-cli/3.70.0/oci_cli_docs/cmdref/ce.html for the CLI options.
+Command to create a kubeconfig in your local could be obtained from console navigating to the OKE > Actions > Access Cluster. Run the command pointing to the PUBLIC_ENDPOINT and we should be connected to the cluster.
 
-# Connected to the `prow` in the `tekton-releases` GCP project
-GCP_ACCOUNT="$ACCOUNT@tekton-releases.iam.gserviceaccount.com"
+1. [Setup a context to connect to the dogfooding cluster](./release-cheat-sheet.md#setup-dogfooding-context) 
 
-# 1. Create a private key for the service account
-gcloud iam service-accounts keys create $KEY_FILE --iam-account $GCP_ACCOUNT
-
-# 2. Create kubernetes secret, which we will use via a service account and directly mounting
-kubectl create secret generic $GENERIC_SECRET --from-file=./$KEY_FILE
-
-# 3. Add the docker secret to the service account
-kubectl apply -f tekton/account.yaml
-kubectl patch serviceaccount $ACCOUNT \
-  -p "{\"secrets\": [{\"name\": \"$GENERIC_SECRET\"}]}"
-```
+1. NOTE: When executing release pipelines, some tasks require OCI CLI commands which need credentials. The OCI credentials secret is already deployed to the dogfooding cluster via terraform and is mounted as a workspace to tasks that require it (such as the precheck task). Release managers do not need to create this secret manually. This is stated here for troubleshooting purposes.
 
 ### Setup post processing
 

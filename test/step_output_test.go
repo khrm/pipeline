@@ -1,5 +1,4 @@
 //go:build e2e
-// +build e2e
 
 /*
 Copyright 2019 The Tekton Authors
@@ -34,6 +33,7 @@ import (
 )
 
 // TestStepOutput verifies that step output streams can be copied to local files and task results.
+// @test:execution=parallel
 func TestStepOutput(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
@@ -51,7 +51,7 @@ func TestStepOutput(t *testing.T) {
 			TaskSpec: &v1.TaskSpec{
 				Steps: []v1.Step{{
 					Name:  "echo",
-					Image: "busybox",
+					Image: "mirror.gcr.io/busybox",
 					VolumeMounts: []corev1.VolumeMount{{
 						Name:      "data",
 						MountPath: "/data",
@@ -62,7 +62,7 @@ func TestStepOutput(t *testing.T) {
 					},
 				}, {
 					Name:  "cat",
-					Image: "busybox",
+					Image: "mirror.gcr.io/busybox",
 					VolumeMounts: []corev1.VolumeMount{{
 						Name:      "data",
 						MountPath: "/data",
@@ -112,6 +112,7 @@ func TestStepOutput(t *testing.T) {
 
 // TestStepOutputWithWorkspace verifies that step output streams can be copied to local files and task results
 // when a workspace is defined for the task.
+// @test:execution=parallel
 func TestStepOutputWithWorkspace(t *testing.T) {
 	t.Parallel()
 	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
@@ -133,14 +134,14 @@ func TestStepOutputWithWorkspace(t *testing.T) {
 			TaskSpec: &v1.TaskSpec{
 				Steps: []v1.Step{{
 					Name:   "echo",
-					Image:  "busybox",
+					Image:  "mirror.gcr.io/busybox",
 					Script: "echo -n " + wantResultValue,
 					StdoutConfig: &v1.StepOutputConfig{
 						Path: "/data/step-echo-stdout",
 					},
 				}, {
 					Name:   "cat",
-					Image:  "busybox",
+					Image:  "mirror.gcr.io/busybox",
 					Script: "cat /data/step-echo-stdout",
 					StdoutConfig: &v1.StepOutputConfig{
 						Path: fmt.Sprintf("$(results.%s.path)", wantResultName),

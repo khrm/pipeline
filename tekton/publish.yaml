@@ -73,7 +73,7 @@ spec:
   steps:
 
   - name: container-registry-auth
-    image: cgr.dev/chainguard/crane:latest-dev@sha256:ac64ee014766e83069a347814f402f6bb291e7a8fdf016404636ee2e6528dc69
+    image: cgr.dev/chainguard/crane:latest-dev@sha256:70e4c0e0faa22a72fae8ccf15d3b8527647d287806f5ea68810d4b52dcd17166
     script: |
       #!/bin/sh
       set -ex
@@ -92,7 +92,7 @@ spec:
       cp ${DOCKER_CONFIG} /workspace/docker-config.json
 
   - name: create-ko-yaml
-    image: cgr.dev/chainguard/go:latest-dev@sha256:6d395f0f0253d6655d1b9ade07aacd9cb79c8ea703f6ceaaad1ab7596894377b
+    image: cgr.dev/chainguard/go:latest-dev@sha256:0fee56a01802781392823a99cf147c8275693271d68e7805a7c64923fd718f04
     script: |
       #!/bin/sh
       set -ex
@@ -104,6 +104,9 @@ spec:
 
       # Change to directory with vendor/
       cd ${PROJECT_ROOT}
+
+      # Copy the repository's .ko.yaml as the base configuration
+      cp ${PROJECT_ROOT}/.ko.yaml /workspace/.ko.yaml
 
       COMBINED_BASE_IMAGE_BASE=${CONTAINER_REGISTRY}
       # If the IMAGE_REGISTRY_PATH does not already includes the package, add it
@@ -121,22 +124,13 @@ spec:
         mcr.microsoft.com/windows/nanoserver:ltsc2022 \
         ${COMBINED_BASE_IMAGE_BASE}/combined-base-image:latest)
 
-      # NOTE: Make sure this list of images to use the combined base image is in sync with what's in test/presubmit-tests.sh's 'ko_resolve' function.
-      cat <<EOF > /workspace/.ko.yaml
-      # This matches the value configured in .ko.yaml
-      defaultBaseImage: cgr.dev/chainguard/static@sha256:67a1b00e0134e2b3a614c7198a26f7deed9d11b7acad4d52c79c0cfd47a2eae7
-      baseImageOverrides:
-        # Use the combined base image for images that should include Windows support.
-        $(params.package)/cmd/entrypoint: ${COMBINED_BASE_IMAGE}
-        $(params.package)/cmd/nop: ${COMBINED_BASE_IMAGE}
-        $(params.package)/cmd/workingdirinit: ${COMBINED_BASE_IMAGE}
-        $(params.package)/cmd/resolvers: ghcr.io/tektoncd/plumbing/tini-git@sha256:2c18f0b3ed4394e27068b5c70bb55419797e8fc743d8ea9e0c2766001b36b5b4
-      EOF
+      # Replace :latest references with the actual combined base image digest
+      sed -i "s|ghcr.io/tektoncd/pipeline/github.com/tektoncd/pipeline/combined-base-image:latest|${COMBINED_BASE_IMAGE}|g" /workspace/.ko.yaml
 
       cat /workspace/.ko.yaml
 
   - name: run-ko
-    image: ghcr.io/tektoncd/plumbing/ko@sha256:1ec6c2f08b052af1a63828d9b7ecae6c14f7a301103fb5f8fcd2c94a662d2737
+    image: ghcr.io/tektoncd/plumbing/ko@sha256:060366802e87efd095d582948c1c072d4bb0d6da9c121a5b096e027a9fa99c17
     env:
     - name: KO_DOCKER_REPO
       value: $(params.imageRegistry)/$(params.imageRegistryPath)
@@ -203,7 +197,7 @@ spec:
       sed -i -e 's/\(pipeline.tekton.dev\/release\): "devel"/\1: "$(params.versionTag)"/g' -e 's/\(app.kubernetes.io\/version\): "devel"/\1: "$(params.versionTag)"/g' -e 's/\(version\): "devel"/\1: "$(params.versionTag)"/g' ${OUTPUT_RELEASE_DIR}/release.notags.yaml
 
   - name: koparse
-    image: ghcr.io/tektoncd/plumbing/koparse@sha256:1898ef549aaff602d06c049136aaf1c1eacc573846c42bbf42d8dc9258235204
+    image: ghcr.io/tektoncd/plumbing/koparse@sha256:37c647b97e8906a5dbf0866c5e7da68355cf0f67edf2954888ccefc31b1c1a80
     script: |
       set -ex
 
@@ -237,7 +231,7 @@ spec:
         ${PRESERVE_IMPORT_PATH} > /workspace/built_images
 
   - name: tag-images
-    image: cgr.dev/chainguard/crane:latest-dev@sha256:ac64ee014766e83069a347814f402f6bb291e7a8fdf016404636ee2e6528dc69
+    image: cgr.dev/chainguard/crane:latest-dev@sha256:70e4c0e0faa22a72fae8ccf15d3b8527647d287806f5ea68810d4b52dcd17166
     script: |
       #!/bin/sh
       set -ex

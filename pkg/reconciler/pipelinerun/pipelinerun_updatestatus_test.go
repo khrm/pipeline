@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/tektoncd/pipeline/pkg/apis/config"
 	v1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1"
 	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
@@ -440,7 +439,7 @@ pipelineTaskName: task
 				Status:     tc.prStatus,
 			}
 
-			updatePipelineRunStatusFromChildRefs(logger, pr, tc.trs, tc.customRuns)
+			updatePipelineRunStatusFromChildRefs(logger, pr, []*v1.PipelineRun{}, tc.trs, tc.customRuns)
 
 			actualPrStatus := pr.Status
 
@@ -455,7 +454,7 @@ pipelineTaskName: task
 				actualPrStatus.ChildReferences = fixedChildRefs
 			}
 
-			if d := cmp.Diff(tc.expectedPrStatus, actualPrStatus, cmpopts.SortSlices(lessChildReferences)); d != "" {
+			if d := cmp.Diff(tc.expectedPrStatus, actualPrStatus); d != "" {
 				t.Errorf("expected the PipelineRun status to match %#v. Diff %s", tc.expectedPrStatus, diff.PrintWantGot(d))
 			}
 		})
@@ -573,7 +572,7 @@ metadata:
 				Status:     tc.prStatus(),
 			}
 
-			if err := updatePipelineRunStatusFromChildObjects(ctx, logger, pr, tc.trs, tc.runs); err != nil {
+			if err := updatePipelineRunStatusFromChildObjects(ctx, logger, pr, []*v1.PipelineRun{}, tc.trs, tc.runs); err != nil {
 				t.Fatalf("received an unexpected error: %v", err)
 			}
 
@@ -592,7 +591,7 @@ metadata:
 
 			expectedPRStatus := prStatusFromInputs(prRunningStatus, tc.expectedStatusTRs, tc.expectedStatusRuns, tc.expectedStatusCRs)
 
-			if d := cmp.Diff(expectedPRStatus, actualPrStatus, cmpopts.SortSlices(lessChildReferences)); d != "" {
+			if d := cmp.Diff(expectedPRStatus, actualPrStatus); d != "" {
 				t.Errorf("expected the PipelineRun status to match %#v. Diff %s", expectedPRStatus, diff.PrintWantGot(d))
 			}
 		})
